@@ -2,36 +2,85 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { PlanManager } from '@/app/components/PlanManager';
+import { CoachWorkoutCard } from '@/app/components/CoachWorkoutCard';
+import type { CoachWorkoutCard as CoachWorkoutCardData } from '@/lib/coach-contract';
 
 type Profile = { name: string; coachStyle: string; timezone?: string; units?: 'metric' | 'imperial'; onboardingComplete: boolean; hasHevyConnection?: boolean };
 type Goal = { id: string; title: string; status: 'active' | 'completed' };
 type Workout = { id: string; title: string; startTime?: string; exercises: unknown[] };
-type Message = { id?: string; role: 'user' | 'assistant'; content: string };
+type Message = { id?: string; role: 'user' | 'assistant'; content: string; cards?: CoachWorkoutCardData[] };
 const apiError = async (response: Response) => (await response.json().catch(() => ({}))).error || 'Something went wrong.';
 
 export default function Home() {
   const [screen, setScreen] = useState<'loading' | 'auth' | 'setup' | 'app'>('loading');
-  const [signup, setSignup] = useState(true); const [pending, setPending] = useState(false); const [error, setError] = useState('');
-  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [name, setName] = useState('');
-  const [style, setStyle] = useState('Encouraging & direct'); const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'); const [units, setUnits] = useState<'metric' | 'imperial'>('metric'); const [state, setState] = useState(''); const [primaryGoal, setPrimaryGoal] = useState(''); const [hevyKey, setHevyKey] = useState('');
-  const [profile, setProfile] = useState<Profile | null>(null); const [goals, setGoals] = useState<Goal[]>([]); const [workouts, setWorkouts] = useState<Workout[]>([]); const [messages, setMessages] = useState<Message[]>([]); const [goal, setGoal] = useState(''); const [question, setQuestion] = useState('');
+  const [signup, setSignup] = useState(true);
+  const [pending, setPending] = useState(false);
+  const [chatPending, setChatPending] = useState(false);
+  const [error, setError] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [style, setStyle] = useState('Encouraging & direct');
+  const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+  const [units, setUnits] = useState<'metric' | 'imperial'>('metric');
+  const [state, setState] = useState('');
+  const [primaryGoal, setPrimaryGoal] = useState('');
+  const [hevyKey, setHevyKey] = useState('');
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [goals, setGoals] = useState<Goal[]>([]);
+  const [workouts, setWorkouts] = useState<Workout[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [goal, setGoal] = useState('');
+  const [question, setQuestion] = useState('');
+
   const load = async () => {
     const session = await fetch('/api/session').then((response) => response.json());
     if (!session.user) { setScreen('auth'); return; }
     if (!session.profile?.onboardingComplete) { setName(session.profile?.name || ''); setScreen('setup'); return; }
     const [p, g, w, c] = await Promise.all([fetch('/api/profile'), fetch('/api/goals'), fetch('/api/workouts'), fetch('/api/chat')]);
-    if (p.ok) setProfile((await p.json()).profile); if (g.ok) setGoals((await g.json()).goals); if (w.ok) setWorkouts((await w.json()).workouts); else setError('Workouts could not be loaded right now.'); if (c.ok) setMessages((await c.json()).messages); setScreen('app');
+    if (p.ok) setProfile((await p.json()).profile);
+    if (g.ok) setGoals((await g.json()).goals);
+    if (w.ok) setWorkouts((await w.json()).workouts); else setError('Workouts could not be loaded right now.');
+    if (c.ok) setMessages((await c.json()).messages);
+    setScreen('app');
   };
+
   useEffect(() => { void load(); }, []);
-  const auth = async (event: FormEvent) => { event.preventDefault(); setPending(true); setError(''); const response = await fetch(`/api/auth/${signup ? 'signup' : 'login'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(signup ? { name, email, password } : { email, password }) }); setPending(false); if (!response.ok) setError(await apiError(response)); else void load(); };
-  const setup = async (event: FormEvent) => { event.preventDefault(); setPending(true); setError(''); const response = await fetch('/api/onboarding', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, coachStyle: style, timezone, units, currentState: state, primaryGoal, hevyKey }) }); setHevyKey(''); setPending(false); if (!response.ok) setError(await apiError(response)); else void load(); };
-  const addGoal = async (event: FormEvent) => { event.preventDefault(); if (!goal.trim()) return; const response = await fetch('/api/goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: goal }) }); if (!response.ok) { setError(await apiError(response)); return; } const { goal: created } = await response.json(); setGoals((current) => [...current, created]); setGoal(''); };
-  const toggleGoal = async (entry: Goal) => { const response = await fetch(`/api/goals/${entry.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: entry.status === 'active' ? 'completed' : 'active' }) }); if (response.ok) { const { goal: updated } = await response.json(); setGoals((current) => current.map((item) => item.id === updated.id ? updated : item)); } };
-  const chat = async (event: FormEvent) => { event.preventDefault(); const text = question.trim(); if (!text) return; setQuestion(''); setMessages((current) => [...current, { role: 'user', content: text }]); const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) }); if (!response.ok) { setError(await apiError(response)); return; } const completed = await response.json(); setMessages((current) => [...current, { role: 'assistant', content: completed.reply }]); };
+
+  const auth = async (event: FormEvent) => {
+    event.preventDefault(); setPending(true); setError('');
+    const response = await fetch(`/api/auth/${signup ? 'signup' : 'login'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(signup ? { name, email, password } : { email, password }) });
+    setPending(false); if (!response.ok) setError(await apiError(response)); else void load();
+  };
+  const setup = async (event: FormEvent) => {
+    event.preventDefault(); setPending(true); setError('');
+    const response = await fetch('/api/onboarding', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, coachStyle: style, timezone, units, currentState: state, primaryGoal, hevyKey }) });
+    setHevyKey(''); setPending(false); if (!response.ok) setError(await apiError(response)); else void load();
+  };
+  const addGoal = async (event: FormEvent) => {
+    event.preventDefault(); if (!goal.trim()) return;
+    const response = await fetch('/api/goals', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: goal }) });
+    if (!response.ok) { setError(await apiError(response)); return; }
+    const { goal: created } = await response.json(); setGoals((current) => [...current, created]); setGoal('');
+  };
+  const toggleGoal = async (entry: Goal) => {
+    const response = await fetch(`/api/goals/${entry.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: entry.status === 'active' ? 'completed' : 'active' }) });
+    if (response.ok) { const { goal: updated } = await response.json(); setGoals((current) => current.map((item) => item.id === updated.id ? updated : item)); }
+  };
+  const chat = async (event: FormEvent) => {
+    event.preventDefault(); const text = question.trim(); if (!text || chatPending) return;
+    setChatPending(true); setError(''); setQuestion(''); setMessages((current) => [...current, { role: 'user', content: text }]);
+    try {
+      const response = await fetch('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: text }) });
+      if (!response.ok) { setMessages((current) => current.slice(0, -1)); setQuestion(text); setError(await apiError(response)); return; }
+      const completed = await response.json(); setMessages((current) => [...current, { role: 'assistant', content: completed.reply, cards: completed.cards }]);
+    } catch { setMessages((current) => current.slice(0, -1)); setQuestion(text); setError('Coach service is temporarily unavailable.'); } finally { setChatPending(false); }
+  };
   const logout = async () => { await fetch('/api/auth/logout', { method: 'POST' }); setScreen('auth'); };
 
   if (screen === 'loading') return <main className="center"><p className="muted">Loading your coach…</p></main>;
-  if (screen === 'auth') return <main className="center"><section className="auth card"><div className="brand">HEVY<span>COACH</span></div><h1>{signup ? 'Create your workspace' : 'Welcome back'}</h1><form onSubmit={auth}>{signup && <label>Name<input value={name} onChange={(e) => setName(e.target.value)} required /></label>}<label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label><label>Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={10} required /></label>{error && <p className="error">{error}</p>}<button className="primary full" disabled={pending}>{pending ? 'Working…' : signup ? 'Create account' : 'Sign in'}</button></form><button className="link" onClick={() => setSignup(!signup)}>{signup ? 'Already have an account? Sign in' : 'Need an account? Sign up'}</button></section></main>;
-  if (screen === 'setup') return <main className="center"><section className="auth card"><div className="brand">HEVY<span>COACH</span></div><h1>Set up your coach</h1><form onSubmit={setup}><label>Name<input value={name} onChange={(e) => setName(e.target.value)} required /></label><label>Coaching style<select value={style} onChange={(e) => setStyle(e.target.value)}><option>Encouraging &amp; direct</option><option>Calm &amp; analytical</option><option>High energy</option></select></label><label>Timezone<input value={timezone} onChange={(e) => setTimezone(e.target.value)} list="zones" required /><datalist id="zones"><option>UTC</option><option>Europe/Oslo</option><option>America/New_York</option></datalist></label><label>Units<select value={units} onChange={(e) => setUnits(e.target.value as 'metric' | 'imperial')}><option value="metric">Metric (kg)</option><option value="imperial">Imperial (lb)</option></select></label><label>Current training state<textarea value={state} onChange={(e) => setState(e.target.value)} required /></label><label>Primary goal<input value={primaryGoal} onChange={(e) => setPrimaryGoal(e.target.value)} required /></label><label>Hevy developer API key<input type="password" value={hevyKey} onChange={(e) => setHevyKey(e.target.value)} required /></label>{error && <p className="error">{error}</p>}<button className="primary full" disabled={pending}>{pending ? 'Validating…' : 'Connect Hevy'}</button></form></section></main>;
-  return <main><aside><div className="brand">HEVY<span>COACH</span></div><nav><a className="active">✦ Coach</a><a>◎ Goals &amp; plans</a><button className="link" onClick={logout}>Sign out</button></nav><div className="profile"><div className="avatar">{profile?.name[0]}</div><div><b>{profile?.name}</b><small>{profile?.timezone || 'UTC'} · {profile?.units || 'metric'}</small></div></div></aside><section className="content"><header><div><p className="eyebrow">PERSONAL COACH</p><h1>Welcome back, {profile?.name}.</h1><p className="muted">Hevy is connected read-only.</p></div></header>{error && <p className="error">{error}</p>}<div className="grid"><div className="chat card"><div className="cardhead"><h2>Coach chat</h2><span className="status">● Ready</span></div><div className="messages">{messages.length ? messages.map((item, index) => <div key={item.id || index} className={`message ${item.role}`}><div className="bubble">{item.content}</div></div>) : <p className="muted">Ask about your next session.</p>}</div><form className="composer" onSubmit={chat}><input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Ask your coach anything…" /><button>Send ↗</button></form></div><div className="right"><div className="card"><div className="cardhead"><h2>Recent workouts</h2><span>{workouts.length}</span></div>{workouts.length ? workouts.map((workout) => <p className="workout" key={workout.id}><b>{workout.title}</b><small>{workout.exercises.length} exercises</small></p>) : <p className="muted">No recent workouts found.</p>}</div><div className="card"><div className="cardhead"><h2>Goals</h2></div><form className="goalform" onSubmit={addGoal}><input value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="Add a goal" /><button className="primary">Add</button></form>{goals.map((entry) => <button className={`goal ${entry.status}`} onClick={() => toggleGoal(entry)} key={entry.id}>{entry.status === 'completed' ? '✓' : '○'} {entry.title}</button>)}</div><PlanManager /></div></div></section></main>;
+  if (screen === 'auth') return <main className="center"><section className="auth card"><div className="brand">HEVY<span>COACH</span></div><h1>{signup ? 'Create your workspace' : 'Welcome back'}</h1><form onSubmit={auth}>{signup && <label>Name<input value={name} onChange={(e) => setName(e.target.value)} required /></label>}<label>Email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label><label>Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={10} required /></label>{error && <p className="error">{error}</p>}<button className="primary full" disabled={pending}>{pending ? 'Working…' : signup ? 'Create account' : 'Sign in'}</button></form>{signup && <a className="key-help" href="https://hevy.com/settings?developer" target="_blank" rel="noreferrer">You will need a Hevy developer API key to connect your workouts.</a>}<button className="link" onClick={() => setSignup(!signup)}>{signup ? 'Already have an account? Sign in' : 'Need an account? Sign up'}</button></section></main>;
+  if (screen === 'setup') return <main className="center"><section className="auth card"><div className="brand">HEVY<span>COACH</span></div><h1>Set up your coach</h1><form onSubmit={setup}><label>Name<input value={name} onChange={(e) => setName(e.target.value)} required /></label><label>Coaching style<select value={style} onChange={(e) => setStyle(e.target.value)}><option>Encouraging &amp; direct</option><option>Calm &amp; analytical</option><option>High energy</option></select></label><label>Timezone<input value={timezone} onChange={(e) => setTimezone(e.target.value)} list="zones" required /><datalist id="zones"><option>UTC</option><option>Europe/Oslo</option><option>America/New_York</option></datalist></label><label>Units<select value={units} onChange={(e) => setUnits(e.target.value as 'metric' | 'imperial')}><option value="metric">Metric (kg)</option><option value="imperial">Imperial (lb)</option></select></label><label>Current training state<textarea value={state} onChange={(e) => setState(e.target.value)} required /></label><label>Primary goal<input value={primaryGoal} onChange={(e) => setPrimaryGoal(e.target.value)} required /></label><label>Hevy developer API key<input type="password" value={hevyKey} onChange={(e) => setHevyKey(e.target.value)} required /></label><a className="key-help" href="https://hevy.com/settings?developer" target="_blank" rel="noreferrer">Find your developer API key in Hevy settings</a>{error && <p className="error">{error}</p>}<button className="primary full" disabled={pending}>{pending ? 'Validating…' : 'Connect Hevy'}</button></form></section></main>;
+
+  return <main><aside><div className="brand">HEVY<span>COACH</span></div><nav><a className="active">✦ Coach</a><a>◎ Goals &amp; plans</a><button className="link" onClick={logout}>Sign out</button></nav><div className="profile"><div className="avatar">{profile?.name[0]}</div><div><b>{profile?.name}</b><small>{profile?.timezone || 'UTC'} · {profile?.units || 'metric'}</small></div></div></aside><section className="content"><header><div><p className="eyebrow">PERSONAL COACH</p><h1>Welcome back, {profile?.name}.</h1><p className="muted">Hevy is connected read-only.</p></div></header>{error && <p className="error">{error}</p>}<div className="grid"><div className="chat card"><div className="cardhead"><h2>Coach chat</h2><span className="status">● {chatPending ? 'Thinking' : 'Ready'}</span></div><div className="messages" aria-busy={chatPending}>{messages.length ? messages.map((item, index) => <div key={item.id || index} className={`message ${item.role}`}><div className="bubble">{item.content}</div>{item.role === 'assistant' && item.cards?.map((card) => <CoachWorkoutCard key={card.workoutId} card={card} units={profile?.units || 'metric'} timezone={profile?.timezone || 'UTC'} />)}</div>) : <p className="muted">Ask about your next session.</p>}{chatPending && <div className="message assistant" role="status" aria-live="polite"><span className="sr-only">Coach is thinking</span><div className="bubble thinking-dots" aria-hidden="true"><i /><i /><i /></div></div>}</div><form className="composer" onSubmit={chat}><input value={question} onChange={(e) => setQuestion(e.target.value)} placeholder="Ask your coach anything…" disabled={chatPending} /><button disabled={chatPending}>{chatPending ? 'Thinking…' : 'Send ↗'}</button></form></div><div className="right"><div className="card"><div className="cardhead"><h2>Recent workouts</h2><span>{workouts.length}</span></div>{workouts.length ? workouts.map((workout) => <p className="workout" key={workout.id}><b>{workout.title}</b><small>{workout.exercises.length} exercises</small></p>) : <p className="muted">No recent workouts found.</p>}</div><div className="card"><div className="cardhead"><h2>Goals</h2></div><form className="goalform" onSubmit={addGoal}><input value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="Add a goal" /><button className="primary">Add</button></form>{goals.map((entry) => <button className={`goal ${entry.status}`} onClick={() => toggleGoal(entry)} key={entry.id}>{entry.status === 'completed' ? '✓' : '○'} {entry.title}</button>)}</div><PlanManager /></div></div></section></main>;
 }

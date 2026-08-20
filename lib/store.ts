@@ -4,6 +4,7 @@ import path from 'node:path';
 import lockfile from 'proper-lockfile';
 import writeFileAtomic from 'write-file-atomic';
 import { z } from 'zod';
+import { coachWorkoutCardSchema, type CoachWorkoutCard } from '@/lib/coach-contract';
 
 const userSchema = z.object({
   id: z.string().uuid(), email: z.string().email(), passwordSalt: z.string().min(1),
@@ -32,7 +33,7 @@ const goalSchema = z.object({
 });
 const messageSchema = z.object({
   id: z.string().uuid(), userId: z.string().uuid(), role: z.enum(['user', 'assistant']),
-  content: z.string().min(1).max(8_000), createdAt: z.string().datetime(),
+  content: z.string().min(1).max(8_000), cards: z.array(coachWorkoutCardSchema).max(3).optional(), createdAt: z.string().datetime(),
 });
 const storeSchema = z.object({
   version: z.literal(1), users: z.array(userSchema), sessions: z.array(sessionSchema),
@@ -44,6 +45,7 @@ export type Session = z.infer<typeof sessionSchema>;
 export type Profile = z.infer<typeof profileSchema>;
 export type Goal = z.infer<typeof goalSchema>;
 export type CoachMessage = z.infer<typeof messageSchema>;
+export type { CoachWorkoutCard } from '@/lib/coach-contract';
 export type Plan = z.infer<typeof planSchema>;
 export type PlanItem = z.infer<typeof planItemSchema>;
 type ProfileInput = Omit<Profile, 'userId' | 'updatedAt' | 'timezone' | 'units'> & Partial<Pick<Profile, 'timezone' | 'units'>>;
@@ -206,10 +208,10 @@ export async function setGoalStatus(userId: string, goalId: string, status: Goal
 export async function listMessages(userId: string, limit = 20) {
   return (await readStore()).messages.filter((message) => message.userId === userId).slice(-limit);
 }
-export async function appendConversationTurn(userId: string, userText: string, assistantText: string) {
+export async function appendConversationTurn(userId: string, userText: string, assistantText: string, cards?: CoachWorkoutCard[]) {
   return withStoreMutation((store) => {
     const now = new Date().toISOString();
-    store.messages.push({ id: randomUUID(), userId, role: 'user', content: userText, createdAt: now }, { id: randomUUID(), userId, role: 'assistant', content: assistantText, createdAt: now });
+    store.messages.push({ id: randomUUID(), userId, role: 'user', content: userText, createdAt: now }, { id: randomUUID(), userId, role: 'assistant', content: assistantText, ...(cards?.length ? { cards } : {}), createdAt: now });
     const all = store.messages.filter((message) => message.userId === userId);
     if (all.length > 50) {
       const keep = new Set(all.slice(-50).map((message) => message.id));

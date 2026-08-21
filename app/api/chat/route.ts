@@ -4,7 +4,7 @@ import { zodTextFormat } from 'openai/helpers/zod';
 import { requireUser } from '@/lib/auth';
 import { appendConversationTurn, getProfile, listGoals, listMessages } from '@/lib/store';
 import { callUserHevyTool } from '@/lib/hevy-mcp-client';
-import { BadRequestError, parseJson } from '@/lib/http';
+import { BadRequestError, parseJson, withStoreErrors } from '@/lib/http';
 import { chatSchema } from '@/lib/schemas';
 import { buildCoachInstructions } from '@/lib/coach-instructions';
 import { coachModelOutputSchema } from '@/lib/coach-contract';
@@ -15,12 +15,15 @@ export const runtime = 'nodejs';
 const unavailable = () => NextResponse.json({ error: 'Coach service is temporarily unavailable.' }, { status: 503 });
 
 export async function GET() {
-  const user = await requireUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  return NextResponse.json({ messages: await listMessages(user.id, 20) });
+  return withStoreErrors(async () => {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ messages: await listMessages(user.id, 20) });
+  });
 }
 
 export async function POST(request: Request) {
+  return withStoreErrors(async () => {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
@@ -60,4 +63,5 @@ export async function POST(request: Request) {
     if (error instanceof BadRequestError) return NextResponse.json({ error: error.message }, { status: 400 });
     return unavailable();
   }
+  });
 }

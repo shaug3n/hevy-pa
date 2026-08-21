@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getProfile, upsertProfile, updateProfile } from '@/lib/store';
 import { requireUser } from '@/lib/auth';
 import { BadRequestError, parseJson } from '@/lib/http';
+import { withStoreErrors } from '@/lib/http';
 import { profileSchema } from '@/lib/schemas';
 
 const publicProfile = (profile: Awaited<ReturnType<typeof getProfile>>) => profile && ({
@@ -10,11 +11,14 @@ const publicProfile = (profile: Awaited<ReturnType<typeof getProfile>>) => profi
   hasHevyConnection: Boolean(profile.hevyCredential), hevyMaskedSuffix: profile.hevyMaskedSuffix, timezone: profile.timezone || 'UTC', units: profile.units || 'metric',
 });
 export async function GET() {
-  const user = await requireUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  return NextResponse.json({ profile: publicProfile(await getProfile(user.id)) });
+  return withStoreErrors(async () => {
+    const user = await requireUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ profile: publicProfile(await getProfile(user.id)) });
+  });
 }
 export async function POST(request: Request) {
+  return withStoreErrors(async () => {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
@@ -26,4 +30,5 @@ export async function POST(request: Request) {
     if (error instanceof BadRequestError) return NextResponse.json({ error: error.message }, { status: 400 });
     throw error;
   }
+  });
 }

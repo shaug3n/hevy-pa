@@ -1,21 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
-import { createSession, createUser, getProfile, listStoreForTestsOnly, upsertProfile } from '@/lib/store';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { appendConversationTurn, completeOnboarding, createPlan, createPlanItem, createSession, createUser, getProfile, listMessages, listPlans, listStoreForTestsOnly, resetStoreForTestsOnly, setPlanItemStatus, updateProfile, upsertProfile } from '@/lib/store';
 import { createUserSession, hashSessionToken, passwordRecord, resolveSessionToken, verifyPassword } from '@/lib/auth';
 
-const testRoot = path.join(process.cwd(), '.test-data');
+beforeEach(() => resetStoreForTestsOnly());
 
-beforeEach(async () => {
-  await fs.rm(testRoot, { recursive: true, force: true });
-  process.env.DATA_STORE_PATH = path.join(testRoot, `store-${crypto.randomUUID()}.json`);
-});
-afterEach(async () => {
-  await fs.rm(testRoot, { recursive: true, force: true });
-  delete process.env.DATA_STORE_PATH;
-});
-
-describe('auth and durable local storage', () => {
+describe('auth and the test-only storage adapter', () => {
   it('uses unique salts and verifies passwords safely', async () => {
     const first = await passwordRecord('correct horse battery staple');
     const second = await passwordRecord('correct horse battery staple');
@@ -38,22 +27,26 @@ describe('auth and durable local storage', () => {
     await expect(resolveSessionToken(user!.id)).resolves.toBeUndefined();
   });
 
-  it('serializes concurrent owner-scoped writes', async () => {
+  it('isolates concurrent user writes in the test adapter', async () => {
     const users = await Promise.all(Array.from({ length: 12 }, async (_, index) => createUser({
       email: `athlete-${index}@example.test`, ...await passwordRecord(`password-${index}-long-enough`),
     })));
     expect((await listStoreForTestsOnly()).users).toHaveLength(12);
-    await Promise.all(users.map((user, index) => upsertProfile(user!.id, {
-      name: `Athlete ${index}`, coachStyle: 'High energy', onboardingComplete: false,
-    })));
+    await Promise.all(users.map((user, index) => upsertProfile(user!.id, { name: `Athlete ${index}`, coachStyle: 'High energy', onboardingComplete: false })));
     expect((await Promise.all(users.map((user) => getProfile(user!.id)))).filter(Boolean)).toHaveLength(12);
   });
 
-  it('does not overwrite corrupted data', async () => {
-    const target = process.env.DATA_STORE_PATH!;
-    await fs.mkdir(path.dirname(target), { recursive: true });
-    await fs.writeFile(target, '{not json');
-    await expect(listStoreForTestsOnly()).rejects.toThrow('local data store is invalid');
+  it('completes onboarding through an atomic profile patch', async () => {
+    const user = await createUser({ email: 'onboarding@example.test', ...await passwordRecord('correct horse battery staple') });
+    await upsertProfile(user!.id, { name: 'Athlete', coachStyle: 'Calm & analytical', currentState: 'Recovering', onboardingComplete: false });
+    await updateProfile(user!.id, { currentState: 'Ready to train' });
+    await completeOnboarding(user!.id, {
+      name: 'Athlete', coachStyle: 'High energy', hevyCredential: 'encrypted', hevyMaskedSuffix: '1234',
+      hevyUserId: 'hevy-user', hevyUserName: 'Hevy Athlete', timezone: 'Europe/Oslo', units: 'metric',
+    });
+    await expect(getProfile(user!.id)).resolves.toMatchObject({
+      currentState: 'Ready to train', coachStyle: 'High energy', onboardingComplete: true, hevyCredential: 'encrypted',
+    });
   });
 
   it('rejects expired sessions', async () => {
@@ -61,5 +54,20 @@ describe('auth and durable local storage', () => {
     const token = 'x'.repeat(48);
     await createSession({ userId: user!.id, tokenHash: hashSessionToken(token), expiresAt: new Date(0).toISOString() });
     await expect(resolveSessionToken(token)).resolves.toBeUndefined();
+  });
+
+  it('keeps plans, items, and chat history owner scoped', async () => {
+    const password = await passwordRecord('correct horse battery staple');
+    const first = await createUser({ email: 'first@example.test', ...password });
+    const second = await createUser({ email: 'second@example.test', ...password });
+    const plan = await createPlan(first!.id, 'Build consistency');
+    const item = await createPlanItem(first!.id, plan!.id, 'Train Monday');
+    await expect(createPlanItem(second!.id, plan!.id, 'Not allowed')).resolves.toBeUndefined();
+    await expect(setPlanItemStatus(second!.id, plan!.id, item!.id, 'completed')).resolves.toBeUndefined();
+    await appendConversationTurn(first!.id, 'What now?', 'Train Monday.');
+    expect((await listPlans(first!.id))[0].items).toHaveLength(1);
+    expect(await listPlans(second!.id)).toEqual([]);
+    expect(await listMessages(first!.id)).toHaveLength(2);
+    expect(await listMessages(second!.id)).toEqual([]);
   });
 });

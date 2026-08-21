@@ -1,6 +1,9 @@
 {
   "name": "hevy-pa",
   "private": true,
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "packageManager": "pnpm@11.19.0",
   "scripts": {
     "clean:next": "node scripts/clean-next.mjs",
@@ -10,24 +13,25 @@
     "start": "next start",
     "typecheck": "pnpm --filter @hevy-pa/hevy-mcp build && tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:migrate": "tsx scripts/migrate.ts"
   },
   "dependencies": {
     "@hevy-pa/hevy-mcp": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.12.0",
+    "@neondatabase/serverless": "^1.0.1",
     "next": "^15.5.0",
     "openai": "^5.12.0",
-    "proper-lockfile": "^4.1.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "write-file-atomic": "^8.0.0",
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.5",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@types/proper-lockfile": "^4.1.4",
+    "tsx": "^4.19.0",
     "typescript": "^5.9.0",
     "vitest": "^3.2.4"
   }

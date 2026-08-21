@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import { requireUser } from '@/lib/auth';
 import { getProfile } from '@/lib/store';
 import { callUserHevyTool, HevyToolError } from '@/lib/hevy-mcp-client';
+import { withStoreErrors } from '@/lib/http';
 export async function GET() {
+  return withStoreErrors(async () => {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const profile = await getProfile(user.id);
@@ -14,4 +16,5 @@ export async function GET() {
     const status = error instanceof HevyToolError && error.code === 'rate_limited' ? 429 : 503;
     return NextResponse.json({ error: 'Hevy is temporarily unavailable. Please try again.' }, { status });
   }
+  });
 }

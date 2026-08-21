@@ -14,46 +14,46 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.12.0
         version: 1.30.0(zod@3.25.76)
+      '@neondatabase/serverless':
+        specifier: ^1.0.1
+        version: 1.1.0
       next:
         specifier: ^15.5.0
         version: 15.5.23(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       openai:
         specifier: ^5.12.0
         version: 5.23.2(zod@3.25.76)
-      proper-lockfile:
-        specifier: ^4.1.2
-        version: 4.1.2
       react:
         specifier: ^19.1.0
         version: 19.2.8
       react-dom:
         specifier: ^19.1.0
         version: 19.2.8(react@19.2.8)
-      write-file-atomic:
-        specifier: ^8.0.0
-        version: 8.0.0
       zod:
         specifier: ^3.25.0
         version: 3.25.76
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.5
+        version: 0.5.5
       '@types/node':
         specifier: ^22.0.0
         version: 22.20.1
-      '@types/proper-lockfile':
-        specifier: ^4.1.4
-        version: 4.1.4
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.18
       '@types/react-dom':
         specifier: ^19.0.0
         version: 19.2.4(@types/react@19.2.18)
+      tsx:
+        specifier: ^4.19.0
+        version: 4.23.12
       typescript:
         specifier: ^5.9.0
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@22.20.1)
+        version: 3.2.7(@types/node@22.20.1)(tsx@4.23.12)
 
   packages/hevy-mcp:
     dependencies:
@@ -72,6 +72,9 @@ importers:
         version: 5.9.3
 
 packages:
+
+  '@electric-sql/pglite@0.5.5':
+    resolution: {integrity: sha512-QeZ+oB7QaU4EJj2awrB8hwFZ5TXxLRBQ9Gfq0dQauYDdWsRtuWRCERgtri35vRfL07KQHlVlc/4Qxvn7a5AXeA==}
 
   '@emnapi/runtime@1.11.3':
     resolution: {integrity: sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==}
@@ -411,6 +414,10 @@ packages:
     os: [linux]
     libc: [glibc]
 
+  '@neondatabase/serverless@1.1.0':
+    resolution: {integrity: sha512-r3ZZhRjEcfEdKIZnoB1RusNgvHuaBRqfCzV4Gi+5A9yUX0S4HTws/ASWqt13wL4y4I+0rqsWGdA2w7EQXHi3+Q==}
+    engines: {node: '>=19.0.0'}
+
   '@next/env@15.5.23':
     resolution: {integrity: sha512-Mv3Z9hVbFcPnoLevsZ6rnX1TBtyHb5E17yN7HTPDXSXxeNsGBjUFrdbjRXKKXIOhfth7/cg6Ay7PZ2UFawaWsQ==}
 
@@ -619,9 +626,6 @@ packages:
   '@types/node@22.20.1':
     resolution: {integrity: sha512-EANqOCF9QFyra+4pfxUcX9STKJpCLjMbObVzljIJomAWSnuSIEAvyzEU53GaajbXJEgdh0iEcPL+DGvpUd4k1Q==}
 
-  '@types/proper-lockfile@4.1.4':
-    resolution: {integrity: sha512-uo2ABllncSqg9F1D4nugVl9v93RmjxF6LJzQLMLDdPaXCUIDPeOJ21Gbqi43xNKzBi/WQ0Q0dICqufzQbMjipQ==}
-
   '@types/react-dom@19.2.4':
     resolution: {integrity: sha512-Bsc+QHgp+P/F02XDzNCY9jnZNCUuLki36KT7VKrTXXLdHf+vHMNZnW1rVu5DNW/rCK+fya3DATySbLM4yhtKUw==}
     peerDependencies:
@@ -629,9 +633,6 @@ packages:
 
   '@types/react@19.2.18':
     resolution: {integrity: sha512-AnzbBERsrLKtk2XSfTbYRLjQPdy116Sty4q+T+Bp3IC4l6jNBvreVPAHmpq9qhXQM7CXZPjLVmGMw9sy+hxQ3w==}
-
-  '@types/retry@0.12.5':
-    resolution: {integrity: sha512-3xSjTp3v03X/lSQLkczaN9UIEwJMoMCA1+Nb5HfbJEQWogdeQIyVtTvxPXDQjZ5zws8rFQfVfRdz03ARihPJgw==}
 
   '@vitest/expect@3.2.7':
     resolution: {integrity: sha512-E8eBXaKibuvH2pSZErOjdVb5vF4PbKYcrnluBTYxEk1l/VhhwZg1kZQsdtjq+CsF5CFydf2Rdkz7jDHKSisi3w==}
@@ -877,9 +878,6 @@ packages:
     resolution: {integrity: sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg==}
     engines: {node: '>= 0.4'}
 
-  graceful-fs@4.2.11:
-    resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
-
   has-symbols@1.1.0:
     resolution: {integrity: sha512-1cDNdwJ2Jaohmb3sg4OmKaMBwuC48sYni5HUw2DvsC8LjGTLK9h+eb1X6RyuOHe4hT0ULCW68iomhjUoKUqlPQ==}
     engines: {node: '>= 0.4'}
@@ -1052,9 +1050,6 @@ packages:
     resolution: {integrity: sha512-u82N74LFzG8ca+dD8puPnplTXoGH4fTPpVGuIbt36G3qvNlkvfD0lEAZSxaly3KX8TS/L1A1gsCEmvKmBcVbkQ==}
     engines: {node: ^10 || ^12 || >=14}
 
-  proper-lockfile@4.1.2:
-    resolution: {integrity: sha512-TjNPblN4BwAWMXU8s9AEz4JmQxnD1NNL7bNOY/AKUzyamc379FWASUhc/K1pL2noVb+XmZKLL68cjzLsiOAMaA==}
-
   proxy-addr@2.0.7:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
     engines: {node: '>= 0.10'}
@@ -1083,10 +1078,6 @@ packages:
   require-from-string@2.0.2:
     resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
     engines: {node: '>=0.10.0'}
-
-  retry@0.12.0:
-    resolution: {integrity: sha512-9LkiTwjUh6rT555DtE9rTX+BKByPfrMzEAtnlEtdEwr3Nkffwiihqe2bWADg+OQRjt9gl6ICdmB/ZFDCGAtSow==}
-    engines: {node: '>= 4'}
 
   rollup@4.62.4:
     resolution: {integrity: sha512-RXOqwaPsBGjMNMa4sQjDjHieHEZDFoj/Rdr46l2MU5DfEs16wHJPC2RPTPHWhNl+M3aI472LLqFkFKut4SblOg==}
@@ -1150,13 +1141,6 @@ packages:
   siginfo@2.0.0:
     resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
 
-  signal-exit@3.0.7:
-    resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
-
-  signal-exit@4.1.0:
-    resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
-    engines: {node: '>=14'}
-
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
@@ -1215,6 +1199,11 @@ packages:
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
+
+  tsx@4.23.12:
+    resolution: {integrity: sha512-FDf4L4sYzKtzWYhU/Xm0AQFdTjdIxNo9ElTf2mxXM6k8YMHXzYUe4yODVaXP4V9uMFbVg8c0qyBccK2OOxb45Q==}
+    engines: {node: '>=18.0.0'}
+    hasBin: true
 
   type-is@2.1.0:
     resolution: {integrity: sha512-faYHw0anBbc/kWF3zFTEnxSFOAGUX9GFbOBthvDdLsIlEoWOFOtS0zgCiQYwIskL9iGXZL3kAXD8OoZ4GmMATA==}
@@ -1322,10 +1311,6 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
-  write-file-atomic@8.0.0:
-    resolution: {integrity: sha512-dYwyZredl67GyLLIHJnRM3h2PcOmN5SkcgC7eM5DPDEOEl6dLFqVrMg3F1Ea32usj4VSVZtd2H4MtKTNOf6nPg==}
-    engines: {node: ^22.22.2 || ^24.15.0 || >=26.0.0}
-
   zod-to-json-schema@3.25.2:
     resolution: {integrity: sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA==}
     peerDependencies:
@@ -1335,6 +1320,8 @@ packages:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
 snapshots:
+
+  '@electric-sql/pglite@0.5.5': {}
 
   '@emnapi/runtime@1.11.3':
     dependencies:
@@ -1547,6 +1534,8 @@ snapshots:
   '@napi-rs/lzma-linux-x64-gnu@1.5.1':
     optional: true
 
+  '@neondatabase/serverless@1.1.0': {}
+
   '@next/env@15.5.23': {}
 
   '@next/swc-darwin-arm64@15.5.23':
@@ -1665,10 +1654,6 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@types/proper-lockfile@4.1.4':
-    dependencies:
-      '@types/retry': 0.12.5
-
   '@types/react-dom@19.2.4(@types/react@19.2.18)':
     dependencies:
       '@types/react': 19.2.18
@@ -1676,8 +1661,6 @@ snapshots:
   '@types/react@19.2.18':
     dependencies:
       csstype: 3.2.3
-
-  '@types/retry@0.12.5': {}
 
   '@vitest/expect@3.2.7':
     dependencies:
@@ -1687,13 +1670,13 @@ snapshots:
       chai: 5.3.3
       tinyrainbow: 2.0.0
 
-  '@vitest/mocker@3.2.7(vite@7.3.6(@types/node@22.20.1))':
+  '@vitest/mocker@3.2.7(vite@7.3.6(@types/node@22.20.1)(tsx@4.23.12))':
     dependencies:
       '@vitest/spy': 3.2.7
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.3.6(@types/node@22.20.1)
+      vite: 7.3.6(@types/node@22.20.1)(tsx@4.23.12)
 
   '@vitest/pretty-format@3.2.7':
     dependencies:
@@ -1969,8 +1952,6 @@ snapshots:
 
   gopd@1.2.0: {}
 
-  graceful-fs@4.2.11: {}
-
   has-symbols@1.1.0: {}
 
   hasown@2.0.4:
@@ -2100,12 +2081,6 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  proper-lockfile@4.1.2:
-    dependencies:
-      graceful-fs: 4.2.11
-      retry: 0.12.0
-      signal-exit: 3.0.7
-
   proxy-addr@2.0.7:
     dependencies:
       forwarded: 0.2.0
@@ -2133,8 +2108,6 @@ snapshots:
   react@19.2.8: {}
 
   require-from-string@2.0.2: {}
-
-  retry@0.12.0: {}
 
   rollup@4.62.4:
     dependencies:
@@ -2280,10 +2253,6 @@ snapshots:
 
   siginfo@2.0.0: {}
 
-  signal-exit@3.0.7: {}
-
-  signal-exit@4.1.0: {}
-
   source-map-js@1.2.1: {}
 
   stackback@0.0.2: {}
@@ -2320,6 +2289,12 @@ snapshots:
 
   tslib@2.8.1: {}
 
+  tsx@4.23.12:
+    dependencies:
+      esbuild: 0.28.2
+    optionalDependencies:
+      fsevents: 2.3.3
+
   type-is@2.1.0:
     dependencies:
       content-type: 2.1.0
@@ -2334,13 +2309,13 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite-node@3.2.4(@types/node@22.20.1):
+  vite-node@3.2.4(@types/node@22.20.1)(tsx@4.23.12):
     dependencies:
       cac: 6.7.14
       debug: 4.4.3
       es-module-lexer: 1.7.0
       pathe: 2.0.3
-      vite: 7.3.6(@types/node@22.20.1)
+      vite: 7.3.6(@types/node@22.20.1)(tsx@4.23.12)
     transitivePeerDependencies:
       - '@types/node'
       - jiti
@@ -2355,7 +2330,7 @@ snapshots:
       - tsx
       - yaml
 
-  vite@7.3.6(@types/node@22.20.1):
+  vite@7.3.6(@types/node@22.20.1)(tsx@4.23.12):
     dependencies:
       esbuild: 0.28.2
       fdir: 6.5.0(picomatch@4.0.5)
@@ -2366,12 +2341,13 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.20.1
       fsevents: 2.3.3
+      tsx: 4.23.12
 
-  vitest@3.2.7(@types/node@22.20.1):
+  vitest@3.2.7(@types/node@22.20.1)(tsx@4.23.12):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.7
-      '@vitest/mocker': 3.2.7(vite@7.3.6(@types/node@22.20.1))
+      '@vitest/mocker': 3.2.7(vite@7.3.6(@types/node@22.20.1)(tsx@4.23.12))
       '@vitest/pretty-format': 3.2.7
       '@vitest/runner': 3.2.7
       '@vitest/snapshot': 3.2.7
@@ -2389,8 +2365,8 @@ snapshots:
       tinyglobby: 0.2.17
       tinypool: 1.1.1
       tinyrainbow: 2.0.0
-      vite: 7.3.6(@types/node@22.20.1)
-      vite-node: 3.2.4(@types/node@22.20.1)
+      vite: 7.3.6(@types/node@22.20.1)(tsx@4.23.12)
+      vite-node: 3.2.4(@types/node@22.20.1)(tsx@4.23.12)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.20.1
@@ -2418,10 +2394,6 @@ snapshots:
       stackback: 0.0.2
 
   wrappy@1.0.2: {}
-
-  write-file-atomic@8.0.0:
-    dependencies:
-      signal-exit: 4.1.0
 
   zod-to-json-schema@3.25.2(zod@3.25.76):
     dependencies:

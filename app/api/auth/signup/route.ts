@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import { createUserWithProfile } from '@/lib/store';
 import { createUserSession, passwordRecord, sessionCookie } from '@/lib/auth';
 import { BadRequestError, parseJson } from '@/lib/http';
+import { withStoreErrors } from '@/lib/http';
 import { signupSchema } from '@/lib/schemas';
 export async function POST(request: Request) {
-  try {
+  return withStoreErrors(async () => { try {
     const input = await parseJson(request, signupSchema);
     const user = await createUserWithProfile({ email: input.email, ...(await passwordRecord(input.password)) }, input.name);
     if (!user) return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
@@ -14,5 +15,5 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof BadRequestError) return NextResponse.json({ error: error.message }, { status: 400 });
     throw error;
-  }
+  } });
 }

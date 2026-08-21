@@ -3,11 +3,13 @@ import { requireUser } from '@/lib/auth';
 import { encrypt } from '@/lib/crypto';
 import { callHevyToolWithKey, HevyToolError } from '@/lib/hevy-mcp-client';
 import { BadRequestError, parseJson } from '@/lib/http';
+import { withStoreErrors } from '@/lib/http';
 import { onboardingSchema } from '@/lib/schemas';
 import { completeOnboarding } from '@/lib/store';
 
 const statusFor = (code: string) => code === 'rate_limited' ? 429 : ['timeout', 'upstream_unavailable'].includes(code) ? 503 : 400;
 export async function POST(request: Request) {
+  return withStoreErrors(async () => {
   const user = await requireUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   try {
@@ -27,4 +29,5 @@ export async function POST(request: Request) {
     if (error instanceof HevyToolError) return NextResponse.json({ error: error.code === 'invalid_credentials' ? 'Hevy key could not be validated.' : 'Hevy is temporarily unavailable. Please try again.' }, { status: statusFor(error.code) });
     throw error;
   }
+  });
 }
